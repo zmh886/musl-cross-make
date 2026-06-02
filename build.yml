@@ -1,0 +1,38 @@
+name: Build musl-cross Toolchain
+
+# 手动触发：你点按钮才会编译（最稳妥）
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Compile x86_64-linux-musl
+    steps:
+      # 1. 拉取仓库代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 安装编译依赖
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git wget libtool-bin
+
+      # 3. 开始编译 x86_64-linux-musl
+      - name: Build toolchain
+        run: |
+          make TARGET=x86_64-linux-musl -j$(nproc)
+          make install
+
+      # 4. 打包成 tgz（你要的文件）
+      - name: Package
+        run: |
+          tar -zcvf x86_64-linux-musl-cross.tgz output
+
+      # 5. 上传成品（编译完供你下载）
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x86_64-linux-musl-cross
+          path: x86_64-linux-musl-cross.tgz
