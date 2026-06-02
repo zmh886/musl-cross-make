@@ -1,0 +1,32 @@
+name: Build musl-cross Toolchain
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Compile x86_64-linux-musl
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential git wget libtool-bin bzip2 xz-utils
+
+      # 开启国内镜像加速下载源码，解决外网超时
+      - name: Build toolchain
+        run: |
+          export MIRROR=https://mirror.tuna.tsinghua.edu.cn/musl-cross
+          make TARGET=x86_64-linux-musl -j$(nproc)
+          make install
+
+      - name: Package
+        run: |
+          tar -zcvf x86_64-linux-musl-cross.tgz output
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x86_64-linux-musl-cross
+          path: x86_64-linux-musl-cross.tgz
